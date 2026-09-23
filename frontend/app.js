@@ -25,6 +25,7 @@ const apiBase = window.TEST3D_API_URL || window.location.origin;
 const apiOrigin = new URL(apiBase, window.location.origin);
 const socketProtocol = apiOrigin.protocol === 'https:' ? 'wss:' : 'ws:';
 const liveUrl = `${socketProtocol}//${apiOrigin.host}${apiOrigin.pathname.replace(/\/$/, '')}/ws/live`;
+const inputUrl = `${socketProtocol}//${apiOrigin.host}${apiOrigin.pathname.replace(/\/$/, '')}/ws/input`;
 
 function formatNumber(value) { return String(value || 0).padStart(6, '0'); }
 function updateClock(element) { element.textContent = new Date().toLocaleTimeString('pt-BR'); }
@@ -117,6 +118,62 @@ function connectLive() {
   socket.addEventListener('error', () => socket.close());
 }
 
+async function startBrowserCamera() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    console.warn('A captura da webcam exige um navegador compatível.');
+    return;
+  }
+
+  const cameraStream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: 'environment' },
+    audio: false,
+  });
+  const camera = document.createElement('video');
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  camera.muted = true;
+  camera.playsInline = true;
+  camera.srcObject = cameraStream;
+  await camera.play();
+
+  const inputSocket = new WebSocket(inputUrl);
+  let waitingForResult = false;
+
+  const sendLatestFrame = () => {
+    if (inputSocket.readyState !== WebSocket.OPEN || waitingForResult) return;
+    if (!camera.videoWidth || !camera.videoHeight) return;
+
+    canvas.width = camera.videoWidth;
+    canvas.height = camera.videoHeight;
+    context.drawImage(camera, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      if (!blob || inputSocket.readyState !== WebSocket.OPEN) return;
+      waitingForResult = true;
+      inputSocket.send(blob);
+    }, 'image/jpeg', 0.8);
+  };
+
+  inputSocket.addEventListener('open', sendLatestFrame);
+  inputSocket.addEventListener('message', () => {
+    waitingForResult = false;
+    sendLatestFrame();
+  });
+  inputSocket.addEventListener('close', () => {
+    cameraStream.getTracks().forEach((track) => track.stop());
+  });
+  inputSocket.addEventListener('error', () => inputSocket.close());
+}
+
+async function configureVideoSource() {
+  try {
+    const response = await fetch('/api/health');
+    const health = await response.json();
+    if (health.video_source === 'browser') await startBrowserCamera();
+  } catch (error) {
+    console.warn('Não foi possível descobrir a origem do vídeo', error);
+  }
+}
+
 function renderDetections(result) {
   latestResult = result;
   const detections = Array.isArray(result?.detections) ? result.detections : [];
@@ -138,3 +195,4 @@ function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, (character
 window.addEventListener('resize', () => drawDetections());
 metricSocket.textContent = 'CONNECTING';
 connectLive();
+configureVideoSource();

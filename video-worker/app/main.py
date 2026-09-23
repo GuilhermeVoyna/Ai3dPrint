@@ -6,6 +6,7 @@ import uvicorn
 from app.config import (
     YOLO_WORKER_URL,
     VIDEO_SOURCE,
+    WEBCAM_INDEX,
     FPS_LIMIT,
     JPEG_QUALITY,
     HOST,
@@ -29,7 +30,7 @@ async def video_pipeline(hub: LiveHub):
     logger.info("Fonte de video: %s", VIDEO_SOURCE)
     logger.info("Worker YOLO: %s", YOLO_WORKER_URL)
 
-    source = VideoSource(VIDEO_SOURCE)
+    source = VideoSource(VIDEO_SOURCE, webcam_index=WEBCAM_INDEX)
     logger.info("Abrindo fonte de video")
     source.open()
     logger.info("Fonte de video aberta")
@@ -83,8 +84,24 @@ async def dashboard_server(hub: LiveHub):
     await uvicorn.Server(config).serve()
 
 
+async def browser_server(hub: LiveHub):
+    yolo_client = YoloClient(YOLO_WORKER_URL)
+    await yolo_client.connect()
+    app = create_app(hub, yolo_client=yolo_client, source_mode="browser")
+    config = uvicorn.Config(app, host=HOST, port=PORT, log_level="info")
+
+    try:
+        await uvicorn.Server(config).serve()
+    finally:
+        await yolo_client.close()
+
+
 async def main():
     hub = LiveHub()
+    if VIDEO_SOURCE.lower() in {"browser", "webcam-windows"}:
+        await browser_server(hub)
+        return
+
     await asyncio.gather(
         video_pipeline(hub),
         dashboard_server(hub),

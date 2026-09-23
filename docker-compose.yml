@@ -56,7 +56,8 @@ services:
       YOLO_WORKER_URL: ws://${YOLO_WORKER_HOST:-yolo-worker}:${YOLO_WS_INTERNAL_PORT:-8002}/inference
       HOST: 0.0.0.0
       PORT: ${VIDEO_WORKER_INTERNAL_PORT:-8010}
-      VIDEO_SOURCE: ${VIDEO_SOURCE:-http://host.docker.internal:8080/?action=stream}
+      VIDEO_SOURCE: ${VIDEO_SOURCE:-webcam-windows}
+      WEBCAM_INDEX: ${WEBCAM_INDEX:-0}
       FPS_LIMIT: ${FPS_LIMIT:-15}
       JPEG_QUALITY: ${JPEG_QUALITY:-80}
 

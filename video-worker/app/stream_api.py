@@ -40,7 +40,7 @@ class LiveHub:
         self._subscribers.discard(queue)
 
 
-def create_app(hub: LiveHub):
+def create_app(hub: LiveHub, yolo_client=None, source_mode: str = ""):
     app = FastAPI(title="Test3D Video Stream")
     app.add_middleware(
         CORSMiddleware,
@@ -51,7 +51,27 @@ def create_app(hub: LiveHub):
 
     @app.get("/health")
     async def health():
-        return {"status": "alive", "service": "video-worker"}
+        return {
+            "status": "alive",
+            "service": "video-worker",
+            "video_source": source_mode,
+        }
+
+    @app.websocket("/ws/input")
+    async def input_stream(websocket: WebSocket):
+        if yolo_client is None:
+            await websocket.close(code=1008, reason="Browser input is disabled")
+            return
+
+        await websocket.accept()
+        try:
+            while True:
+                frame = await websocket.receive_bytes()
+                result = await yolo_client.send_frame(frame)
+                await hub.publish(hub.frames_processed + 1, frame, result)
+                await websocket.send_text(json.dumps(result))
+        except (WebSocketDisconnect, RuntimeError):
+            pass
 
     @app.websocket("/ws/live")
     async def live(websocket: WebSocket):

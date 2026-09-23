@@ -15,28 +15,24 @@ class FrameCapture:
         jpeg_quality: int
     ):
         self.video_source = video_source
-        self.fps_limit = 1 / fps_limit
+        self.frame_interval = 1 / fps_limit
         self.jpeg_quality = jpeg_quality
 
     def frames(self):
         last_frame_time = 0
 
         while True:
-            success, frame = self.video_source.read()
+            current_time = time.perf_counter()
+            wait_time = self.frame_interval - (current_time - last_frame_time)
+            if wait_time > 0:
+                time.sleep(wait_time)
 
-            # Stop the loop if frame capture fails.
+            success, frame = self.video_source.read_latest()
             if not success:
                 logger.error("Captura encerrada porque nao foi possivel ler um frame")
                 break
 
-            current_time = time.perf_counter()
-
-            # Check whether the frame interval has elapsed.
-            if current_time - last_frame_time < self.fps_limit:
-                continue
-
-            # Update the time of the last processed frame.
-            last_frame_time = current_time
+            last_frame_time = time.perf_counter()
 
             # Encode the frame as JPEG.
             success, encoded = cv2.imencode(

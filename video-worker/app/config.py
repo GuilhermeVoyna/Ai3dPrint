@@ -7,8 +7,9 @@ YOLO_WORKER_URL = os.getenv(
 
 VIDEO_SOURCE = os.getenv(
     "VIDEO_SOURCE",
-    "http://192.168.0.139:8080/?action=stream"
+    "webcam-windows"
 )
+WEBCAM_INDEX = int(os.getenv("WEBCAM_INDEX", "0"))
 
 FPS_LIMIT = int(os.getenv("FPS_LIMIT", "30"))
 JPEG_QUALITY = int(os.getenv("JPEG_QUALITY", "80"))
