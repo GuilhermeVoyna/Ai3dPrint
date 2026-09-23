@@ -1,0 +1,14 @@
+import os
+
+YOLO_WORKER_URL = os.getenv(
+    "YOLO_WORKER_URL",
+    "ws://localhost:8002/inference"
+)
+
+VIDEO_SOURCE = os.getenv(
+    "VIDEO_SOURCE",
+    "http://192.168.0.139:8080/?action=stream"
+)
+
+FPS_LIMIT = int(os.getenv("FPS_LIMIT", "30"))
+JPEG_QUALITY = int(os.getenv("JPEG_QUALITY", "80"))

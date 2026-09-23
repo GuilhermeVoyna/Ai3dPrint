@@ -1,0 +1,69 @@
+services:
+  yolo-worker:
+    build:
+      context: ./yolo-worker
+    container_name: test3d-yolo-worker
+    restart: unless-stopped
+    devices:
+      - /dev/dxg:/dev/dxg
+    ipc: host
+    shm_size: 8G
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    volumes:
+      - /usr/lib/wsl/lib/libdxcore.so:/usr/lib/libdxcore.so:ro
+    ports:
+      - "8002:8002"
+      - "8003:8003"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8002
+      DEVICE: ${DEVICE:-0}
+      LD_LIBRARY_PATH: /opt/rocm/lib:/usr/lib/wsl/lib:/usr/lib
+      HSA_ENABLE_DXG_DETECTION: "1"
+      YOLO_CONFIG_DIR: /app/.ultralytics
+      OMP_NUM_THREADS: ${OMP_NUM_THREADS:-16}
+      MKL_NUM_THREADS: ${MKL_NUM_THREADS:-16}
+      OPENBLAS_NUM_THREADS: ${OPENBLAS_NUM_THREADS:-16}
+      NUMEXPR_NUM_THREADS: ${NUMEXPR_NUM_THREADS:-16}
+      TORCH_NUM_THREADS: ${TORCH_NUM_THREADS:-16}
+      TORCH_INTEROP_THREADS: ${TORCH_INTEROP_THREADS:-4}
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8003/health').read()"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  video-worker:
+    build:
+      context: ./video-worker
+    container_name: test3d-video-worker
+    depends_on:
+      yolo-worker:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - "8010:8010"
+    environment:
+      YOLO_WORKER_URL: ws://yolo-worker:8002/inference
+      VIDEO_SOURCE: ${VIDEO_SOURCE:-http://host.docker.internal:8080/?action=stream}
+      FPS_LIMIT: ${FPS_LIMIT:-15}
+      JPEG_QUALITY: ${JPEG_QUALITY:-80}
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: test3d-frontend
+    depends_on:
+      video-worker:
+        condition: service_started
+    ports:
+      - "8090:80"
+    restart: unless-stopped

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b1117" />
+    <title>Test3D | Monitor de visão</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Test3D início"><span class="brand-mark">T3</span><span>TEST3D</span></a>
+      <div class="topbar-meta"><span class="live-dot"></span><span id="connection-label">Conectando</span><span class="divider"></span><span class="mono">VIDEO WORKER / 8010</span></div>
+    </header>
+
+    <main class="shell">
+      <section class="intro">
+        <div><p class="eyebrow">Central de operações</p><h1>Visão em tempo real<span class="accent">.</span></h1><p class="lede">Acompanhe o stream da câmera e as detecções do modelo em um só lugar.</p></div>
+        <div class="intro-status"><span class="status-icon" id="status-icon">◌</span><div><strong id="status-text">Aguardando sinal</strong><small id="last-update">Sem atualização</small></div></div>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="panel stream-panel">
+          <div class="panel-heading"><div><p class="panel-kicker">Feed ao vivo</p><h2>Câmera principal</h2></div><span class="pill" id="stream-pill">OFFLINE</span></div>
+          <div class="stream-frame"><canvas id="processed-frame" aria-label="Frames processados pela câmera"></canvas><canvas id="detection-overlay" aria-hidden="true"></canvas><div class="stream-placeholder" id="stream-placeholder"><span class="placeholder-icon">▧</span><strong>Esperando o primeiro frame</strong><small>O vídeo aparecerá aqui quando o worker iniciar.</small></div><span class="frame-corner top-left"></span><span class="frame-corner top-right"></span><span class="frame-corner bottom-left"></span><span class="frame-corner bottom-right"></span></div>
+          <div class="stream-footer"><span><i class="signal-bars"></i> <span id="stream-state">Sinal não detectado</span></span><span class="mono" id="frame-count">000000 frames</span></div>
+        </article>
+
+        <aside class="panel detections-panel">
+          <div class="panel-heading"><div><p class="panel-kicker">Leitura do modelo</p><h2>Detecções</h2></div><span class="detection-count" id="detection-count">00</span></div>
+          <div class="detection-list" id="detection-list"><div class="empty-state"><span>—</span><p>Nenhuma detecção<br />registrada ainda.</p></div></div>
+          <div class="panel-footnote"><span class="legend-dot"></span><span>Atualização via WebSocket</span><span class="mono" id="result-time">--:--:--</span></div>
+        </aside>
+      </section>
+
+      <section class="metrics-row" aria-label="Métricas do sistema">
+        <div class="metric"><span class="metric-label">Frames processados</span><strong class="metric-value mono" id="metric-frames">000000</strong><span class="metric-note">atualização por frame</span></div>
+        <div class="metric"><span class="metric-label">Estado do serviço</span><strong class="metric-value service-value" id="metric-service">WAITING</strong><span class="metric-note">video-worker / api</span></div>
+        <div class="metric"><span class="metric-label">Canal de resultados</span><strong class="metric-value service-value" id="metric-socket">CLOSED</strong><span class="metric-note">websocket / ws-results</span></div>
+      </section>
+    </main>
+    <footer class="footer"><span>TEST3D SYSTEMS</span><span class="mono">BUILD 01.00 / LOCAL NETWORK</span></footer>
+  </body>
+</html>
