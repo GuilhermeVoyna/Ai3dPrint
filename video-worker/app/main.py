@@ -7,7 +7,9 @@ from app.config import (
     YOLO_WORKER_URL,
     VIDEO_SOURCE,
     FPS_LIMIT,
-    JPEG_QUALITY
+    JPEG_QUALITY,
+    HOST,
+    PORT,
 )
 
 from app.camera.video_source import VideoSource
@@ -74,8 +76,8 @@ async def video_pipeline(hub: LiveHub):
 async def dashboard_server(hub: LiveHub):
     config = uvicorn.Config(
         create_app(hub),
-        host="0.0.0.0",
-        port=8010,
+        host=HOST,
+        port=PORT,
         log_level="info",
     )
     await uvicorn.Server(config).serve()

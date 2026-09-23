@@ -7,7 +7,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 MODEL_PATH = BASE_DIR / "models" / "modelo.pt"
 
 HOST = "0.0.0.0"
-PORT = 8002
+PORT = int(os.getenv("PORT", "8002"))
+HTTP_PORT = int(os.getenv("HTTP_PORT", "8003"))
 
 REQUESTED_DEVICE = os.getenv("DEVICE", "cpu")
 

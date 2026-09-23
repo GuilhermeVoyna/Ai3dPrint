@@ -21,9 +21,8 @@ const metricService = document.querySelector('#metric-service');
 const metricSocket = document.querySelector('#metric-socket');
 const streamState = document.querySelector('#stream-state');
 
-const isLocalFrontend = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-const apiBase = window.TEST3D_API_URL || (isLocalFrontend && window.location.port !== '8010' ? 'http://localhost:8010' : '');
-const apiOrigin = apiBase ? new URL(apiBase, window.location.origin) : window.location;
+const apiBase = window.TEST3D_API_URL || window.location.origin;
+const apiOrigin = new URL(apiBase, window.location.origin);
 const socketProtocol = apiOrigin.protocol === 'https:' ? 'wss:' : 'ws:';
 const liveUrl = `${socketProtocol}//${apiOrigin.host}${apiOrigin.pathname.replace(/\/$/, '')}/ws/live`;
 

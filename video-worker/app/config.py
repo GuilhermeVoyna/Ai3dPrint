@@ -12,3 +12,5 @@ VIDEO_SOURCE = os.getenv(
 
 FPS_LIMIT = int(os.getenv("FPS_LIMIT", "30"))
 JPEG_QUALITY = int(os.getenv("JPEG_QUALITY", "80"))
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "8010"))

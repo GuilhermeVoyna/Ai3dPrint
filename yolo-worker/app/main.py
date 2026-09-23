@@ -7,7 +7,7 @@ import uvicorn
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import HOST, PORT
+from app.config import HOST, HTTP_PORT, PORT
 from app.services.inference_service import InferenceService
 
 
@@ -102,7 +102,7 @@ async def http_server():
     config = uvicorn.Config(
         app=app,
         host="0.0.0.0",
-        port=8003,
+        port=HTTP_PORT,
         log_level="info",
     )
 
@@ -112,7 +112,7 @@ async def http_server():
 
 
 async def main():
-    print("Health check: http://localhost:8003/health")
+    print(f"Health check: http://localhost:{HTTP_PORT}/health")
 
     await asyncio.gather(
         websocket_server(),
