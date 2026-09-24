@@ -7,6 +7,7 @@ from app.config import (
     MODEL_PATH,
     DEVICE,
     IMAGE_SIZE,
+    INFERENCE_HALF,
     CONFIDENCE_THRESHOLD,
 )
 
@@ -40,13 +41,17 @@ class InferenceService:
         if frame is None:
             raise ValueError("Não foi possível decodificar o frame.")
 
-        results = self.model.predict(
-            source=frame,
-            imgsz=IMAGE_SIZE,
-            conf=CONFIDENCE_THRESHOLD,
-            device=DEVICE,
-            verbose=False,
-        )
+        predict_options = {
+            "source": frame,
+            "imgsz": IMAGE_SIZE,
+            "conf": CONFIDENCE_THRESHOLD,
+            "device": DEVICE,
+            "verbose": False,
+        }
+        if INFERENCE_HALF:
+            predict_options["half"] = True
+
+        results = self.model.predict(**predict_options)
 
         result = results[0]
         detections = []

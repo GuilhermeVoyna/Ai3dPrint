@@ -1,5 +1,12 @@
 # Test3D
 
+## Workers
+
+The `video-worker` captures frames, calls the YOLO worker, and publishes
+detection results through the internal `WS /ws/detections` endpoint. The
+separate `failure-worker` consumes those JSON results, confirms failures, and
+controls Moonraker. It does not access the camera or the model directly.
+
 ## Video source
 
 The video worker supports either a network stream or a local webcam.

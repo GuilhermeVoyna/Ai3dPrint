@@ -24,5 +24,8 @@ else:
     DEVICE = "cpu"
     print("Utilizando CPU.")
 
-IMAGE_SIZE = 640
+IMAGE_SIZE = int(os.getenv("IMAGE_SIZE", "320"))
+INFERENCE_HALF = os.getenv("INFERENCE_HALF", "true").lower() in {
+    "1", "true", "yes", "on"
+}
 CONFIDENCE_THRESHOLD = float(os.getenv("CONFIDENCE_THRESHOLD", "0.01"))

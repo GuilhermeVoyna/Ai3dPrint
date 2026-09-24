@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 
 import uvicorn
 
@@ -42,7 +43,6 @@ async def video_pipeline(hub: LiveHub):
     )
 
     yolo_client = YoloClient(YOLO_WORKER_URL)
-
     try:
         logger.info("Conectando ao worker YOLO")
         await yolo_client.connect()
@@ -56,14 +56,18 @@ async def video_pipeline(hub: LiveHub):
                 logger.error("Captura de video encerrada")
                 break
 
+            inference_started = time.perf_counter()
             resultado = await yolo_client.send_frame(frame)
+            inference_seconds = time.perf_counter() - inference_started
             frames_sent += 1
             await hub.publish(frames_sent, frame, resultado)
 
             if frames_sent == 1 or frames_sent % 30 == 0:
                 logger.info(
-                    "Frames enviados ao YOLO: %d | Ultimo resultado: %s",
+                    "Frames enviados ao YOLO: %d | inference_time=%.3fs | effective_fps=%.2f | Ultimo resultado: %s",
                     frames_sent,
+                    inference_seconds,
+                    1 / inference_seconds if inference_seconds else 0,
                     resultado
                 )
 
@@ -84,22 +88,18 @@ async def dashboard_server(hub: LiveHub):
     await uvicorn.Server(config).serve()
 
 
-async def browser_server(hub: LiveHub):
-    yolo_client = YoloClient(YOLO_WORKER_URL)
-    await yolo_client.connect()
-    app = create_app(hub, yolo_client=yolo_client, source_mode="browser")
-    config = uvicorn.Config(app, host=HOST, port=PORT, log_level="info")
-
-    try:
-        await uvicorn.Server(config).serve()
-    finally:
-        await yolo_client.close()
-
-
 async def main():
     hub = LiveHub()
     if VIDEO_SOURCE.lower() in {"browser", "webcam-windows"}:
-        await browser_server(hub)
+        yolo_client = YoloClient(YOLO_WORKER_URL)
+        await yolo_client.connect()
+        app = create_app(
+            hub,
+            yolo_client=yolo_client,
+            source_mode="browser",
+        )
+        config = uvicorn.Config(app, host=HOST, port=PORT, log_level="info")
+        await uvicorn.Server(config).serve()
         return
 
     await asyncio.gather(
